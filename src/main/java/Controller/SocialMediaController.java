@@ -30,10 +30,8 @@ public class SocialMediaController {
      * @return a Javalin app object which defines the behavior of the Javalin controller.
      */
     public Javalin startAPI() {
-        Javalin app = Javalin.create().start(8080);
-        System.out.println("sss");
+        Javalin app = Javalin.create().start();
         app.post("/register", this::register);
-        System.out.println("ffff");
         app.post("/login", this::login);
         app.post("/messages", this::createMessage);
         app.get("/messages", this::getAllMessages);
@@ -41,7 +39,7 @@ public class SocialMediaController {
         app.delete("/messages/{message_id}", this::deleteMessageById);
         app.patch("/messages/{message_id}", this::updateMessageById);
         app.get("/accounts/{account_id}/messages", this::getMessagesByUserId);
-
+        app.start(8080);
         return app;
     }
 
@@ -54,12 +52,10 @@ public class SocialMediaController {
     // }
 
     // Endpoints for user registration
+
     private void register(Context ctx) {
-        System.out.println("00000");
         Account newAccount = ctx.bodyAsClass(Account.class);
-        System.out.println("111111");
         if (newAccount.getUsername().isBlank() || newAccount.getPassword().length() < 4) {
-            System.out.print("HERE");
             ctx.status(400);
         }
 
