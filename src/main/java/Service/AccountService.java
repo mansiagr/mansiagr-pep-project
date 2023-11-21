@@ -1,5 +1,4 @@
 package Service;
-import java.util.ArrayList;
 import DAO.AccountDAO;
 import Model.Account;
 
@@ -21,9 +20,4 @@ public class AccountService {
     public Account authenticateUser(Account account) {
         return accountDAO.authenticateUser(account);
     }
-    
-    //doesUsernameExist
-    //register
-    //authenticateUser
-
 }
