@@ -30,7 +30,7 @@ public class SocialMediaController {
      * @return a Javalin app object which defines the behavior of the Javalin controller.
      */
     public Javalin startAPI() {
-        Javalin app = Javalin.create().start();
+        Javalin app = Javalin.create();
         app.post("/register", this::register);
         app.post("/login", this::login);
         app.post("/messages", this::createMessage);
@@ -39,7 +39,6 @@ public class SocialMediaController {
         app.delete("/messages/{message_id}", this::deleteMessageById);
         app.patch("/messages/{message_id}", this::updateMessageById);
         app.get("/accounts/{account_id}/messages", this::getMessagesByUserId);
-        app.start(8080);
         return app;
     }
 
@@ -47,21 +46,22 @@ public class SocialMediaController {
      * This is an example handler for an example endpoint.
      * @param context The Javalin Context object manages information about both the HTTP request and response.
      */
-    // private void exampleHandler(Context context) {
-    //     context.json("sample text");
-    // }
-
-    // Endpoints for user registration
-
     private void register(Context ctx) {
         Account newAccount = ctx.bodyAsClass(Account.class);
-        if (newAccount.getUsername().isBlank() || newAccount.getPassword().length() < 4) {
+        System.out.print(newAccount.getPassword().length());
+        if (newAccount.getUsername().isBlank()) {
             ctx.status(400);
+            return;
         }
 
-        //check if username exists, else give error. then made new account 
+        if (newAccount.getPassword().length() < 4) {
+            ctx.status(400);
+            return;
+        }
+
         if (accountService.doesUsernameExist(newAccount.getUsername())) {
             ctx.status(400);
+            return;
         }
 
         Account accountMade = accountService.register(newAccount);
@@ -74,7 +74,6 @@ public class SocialMediaController {
           }
     }
 
-    // Endpoint for user login
     private void login(Context ctx) {
         Account loginAccount = ctx.bodyAsClass(Account.class);
 
@@ -82,25 +81,23 @@ public class SocialMediaController {
         if (authenticatedAccount != null) {
             ctx.status(200).json(authenticatedAccount);
         } else {
-            ctx.status(401).json("Unauthorized");
+            ctx.status(401);
         }
     }
 
-    // Endpoint for creating a new message
     private void createMessage(Context ctx) {
-        Message newMessage = ctx.bodyAsClass(Message.class); // Deserialize JSON body to Message object
+        Message newMessage = ctx.bodyAsClass(Message.class); 
 
         if (newMessage.getMessage_text().isBlank() || newMessage.getMessage_text().length() > 255) {
-            ctx.status(400).json("Invalid message text");
+            ctx.status(400);
             return;
         }
 
-        // Check if the user exists (posted_by field) - You should implement this validation logic
         int userId = newMessage.getPosted_by();
-        boolean userExists = messageService.doesIdExist(userId); // You need to implement this method
+        boolean userExists = messageService.doesIdExist(userId); 
     
         if (!userExists) {
-            ctx.status(400).json("User specified in posted_by field does not exist");
+            ctx.status(400);
             return;
         }
 
@@ -109,70 +106,64 @@ public class SocialMediaController {
         if (createdMessage != null) {
             ctx.status(200).json(createdMessage);
         } else {
-            ctx.status(400).json("Failed to create message");
+            ctx.status(400);
         }
     }
 
-    // Endpoint for retrieving all messages
     private void getAllMessages(Context ctx) {
         ArrayList<Message> messagesRetrieved = messageService.getAllMessages();
         ctx.json(messagesRetrieved).status(200);
 
     }
 
-    // Endpoint for retrieving a message by its ID
     private void getMessageById(Context ctx) {
-        int idFromPath = Integer.parseInt(ctx.pathParam("id"));
+        int idFromPath = Integer.parseInt(ctx.pathParam("message_id"));
+        System.out.println(idFromPath);
         Message message = messageService.getMessageById(idFromPath);
-        ctx.status(200).json(message);
-        // if (message != null) {
-        //     ctx.status(200).json(message);
-        // } else {
-        //     ctx.status(200).json("Message not found");
-        // }
+        System.out.println(message);
+        if (message != null) {
+            ctx.status(200).json(message);
+        } else {
+            ctx.status(200);
+        }
     }
 
-    // Endpoint for deleting a message by its ID
     private void deleteMessageById(Context ctx) {
-        int idFromPath = Integer.parseInt(ctx.pathParam("id"));
+        int idFromPath = Integer.parseInt(ctx.pathParam("message_id"));
+        Message message = messageService.getMessageById(idFromPath);
         boolean deleted = messageService.deleteMessageById(idFromPath);
-        ctx.status(200).json(deleted);
-        // if (deleted) {
-        //     ctx.status(200).json("Message deleted successfully");
-        // } else { //check if message existed?
-        //     ctx.status(200).json("Message not found");
-        // }
+        if (deleted) {
+            ctx.status(200).json(message);
+        } else { 
+            ctx.status(200);
+        }
     }
 
-    // Endpoint for updating a message by its ID
     private void updateMessageById(Context ctx) {
-        int idFromPath = Integer.parseInt(ctx.pathParam("id"));
+        int idFromPath = Integer.parseInt(ctx.pathParam("message_id"));
         Message messageFromBody = ctx.bodyAsClass(Message.class);
 
         if (messageFromBody.getMessage_text().isBlank() || messageFromBody.getMessage_text().length() > 255) {
-            ctx.status(400).json("Invalid message text");
+            ctx.status(400);
             return;
         }
 
-        //check if username exists, else give error. then made new account 
         if (messageService.doesIdExist(messageFromBody.getMessage_id())) {
-            ctx.status(400).json("ID does not exist");
+            ctx.status(400);
             return;
         }
 
         boolean updatedMessage = messageService.updateMessageById(idFromPath, messageFromBody);
-
-        // send response depending on information received from service layer
+        Message message = messageService.getMessageById(idFromPath);
         if (updatedMessage) {
-          ctx.json(updatedMessage).status(200);
+          ctx.json(message).status(200);
         } else {
-          ctx.result("Note was not updated!").status(400);
+          ctx.status(400);
         }
     }
 
-    // Endpoint for retrieving all messages by a particular user
     private void getMessagesByUserId(Context ctx) {
-        int idFromPath = Integer.parseInt(ctx.pathParam("id"));
+        int idFromPath = Integer.parseInt(ctx.pathParam("account_id"));
         ArrayList<Message> messages = messageService.getMessagesByUserId(idFromPath);
         ctx.status(200).json(messages);
     }
