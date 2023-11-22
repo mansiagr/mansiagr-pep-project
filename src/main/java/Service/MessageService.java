@@ -2,13 +2,12 @@ package Service;
 import java.util.ArrayList;
 import DAO.MessageDAO;
 import Model.Message;
-import java.util.ArrayList;
 
 public class MessageService {
     private MessageDAO messageDAO;
 
     public MessageService() {
-        this.messageDAO = new MessageDAO(); // Assuming MessageDAO is the DAO class for Message
+        this.messageDAO = new MessageDAO(); 
     }
 
     public boolean doesIdExist(int messageId) {
@@ -39,13 +38,4 @@ public class MessageService {
         return messageDAO.getMessagesByUserId(userId);
     }
 
-
-    
-    //updateMessageById
-    //doesIdExist
-    //getAllMessages
-    //createMessage
-    //getMessageById
-    //deleteMessageById
-    //getMessagesByUserId (list)
 }
